@@ -1,0 +1,20 @@
+services:
+  cups:
+    container_name: cups
+    hostname: cups
+    image: goosews/cups:latest
+    ports:
+      - "631:631"
+    environment:
+      - "TZ=America/New_York"
+    volumes:
+      - "/some/persistent/path/cups:/etc/cups"
+      - "/etc/localtime:/etc/localtime:ro"
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-file: "3"
+        max-size: "10M"
