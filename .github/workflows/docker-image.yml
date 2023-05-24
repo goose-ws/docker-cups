@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Scrub the USB device from the compose file 
-        run: grep -Ev "^    (devices:|  - \"/dev/bus/usb:/dev/bus/usb\")" "docker-compose.yaml" | sponge "docker-compose.yaml"
+        run: grep -Ev "^    (devices:|  - \"/dev/bus/usb:/dev/bus/usb\")" "docker-compose.yaml" | tee "docker-compose.yaml"
       - name: Test the Docker image
         run: docker-compose up -d 
   push_to_registry:
