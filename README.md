@@ -1,6 +1,6 @@
 [![Pulls on DockerHub](https://img.shields.io/docker/pulls/goosews/cups.svg?style=for-the-badge&label=DockerHub%20pulls&logo=docker)](https://hub.docker.com/r/goosews/cups)
 [![Stars on DockerHub](https://img.shields.io/docker/stars/goosews/cups.svg?style=for-the-badge&label=DockerHub%20stars&logo=docker)](https://hub.docker.com/r/goosews/cups)
-[![Stars on GitHub](https://img.shields.io/github/stars/goose-ws/cups.svg?style=for-the-badge&label=GitHub%20Stars&logo=github)](https://github.com/goose-ws/cups)
+[![Stars on GitHub](https://img.shields.io/github/stars/goose-ws/docker-cups.svg?style=for-the-badge&label=GitHub%20Stars&logo=github)](https://github.com/goose-ws/docker-cups)
 
 # CUPS Docker Image
 
