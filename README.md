@@ -47,5 +47,5 @@ Default credentials: admin / admin
 You can add/remove/edit users and passwords via the `user-management` command. Once the container is running, you can utilize this with the command:
 
 ```bash
-docker exec -it <container_name> user-management
+docker exec -it cups user-management
 ```
