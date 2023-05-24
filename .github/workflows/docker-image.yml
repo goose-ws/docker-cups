@@ -16,14 +16,14 @@ jobs:
 
   build:
 
-    runs-on: debian-latest
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run: docker-compose build --no-cache --force-rm 
   test:
-    runs-on: debian-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Create virtual USB directory for GitHub test action
@@ -32,7 +32,7 @@ jobs:
         run: docker-compose up -d 
   push_to_registry:
     name: Push Docker image to Docker Hub
-    runs-on: debian-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
