@@ -28,8 +28,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: Remove the USB device from the compose file
         run: grep -Ev "^    (devices:|  - \"/dev/bus/usb:/dev/bus/usb\")" "docker-compose.yaml" > "docker-compose-no-usb.yaml"
+      - name: Move the no USB to our compose file
+        run: mv "docker-compose-no-usb.yaml" "docker-compose.yaml"
       - name: Test the Docker image
-        run: docker-compose up -d -f "docker-compose-no-usb.yaml"
+        run: docker-compose up -d
   push_to_registry:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
