@@ -48,3 +48,6 @@ VOLUME ["/etc/cups"]
 
 # ports
 EXPOSE 631
+
+# healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD pidof cupsd > /dev/null 2>&1

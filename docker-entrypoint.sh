@@ -32,24 +32,27 @@ trap stop_cmd_4 SIGHUP
 trap stop_cmd_5 ERR
 trap stop_cmd_6 SIGKILL
 
-/usr/local/bin/user-management --load-persistent-users
-
-/usr/sbin/cupsd
-while ! [[ -f "/var/run/cups/cupsd.pid" ]]; do
-	sleep 1
-done
-cupsctl --remote-admin --remote-any --share-printers
-kill "$(</var/run/cups/cupsd.pid)"
-echo "ServerAlias *" >> /etc/cups/cupsd.conf
-cp -rp /etc/cups /etc/cups-skel
-
-echo "admin:${ADMIN_PASSWORD}" | chpasswd
-
-if [ ! -f /etc/cups/cupsd.conf ]; then
-    cp -rpn /etc/cups-skel/* /etc/cups/
-fi
-
 if [[ -z "${@}" ]]; then
+	echo "Loading persistent users"
+	/usr/local/bin/user-management --load-persistent-users
+	echo "Initiating cupsd"
+	/usr/sbin/cupsd
+	while ! [[ -f "/var/run/cups/cupsd.pid" ]]; do
+		sleep 1
+	done
+	echo "Applying remote share permissions"
+	cupsctl --remote-admin --remote-any --share-printers
+	echo "Stopping cupsd"
+	kill "$(</var/run/cups/cupsd.pid)"
+	echo "Adding global ServerAlias configuration option"
+	echo "ServerAlias *" >> /etc/cups/cupsd.conf
+	cp -rp /etc/cups /etc/cups-skel
+	if [ ! -f /etc/cups/cupsd.conf ]; then
+		cp -rpn /etc/cups-skel/* /etc/cups/
+	fi
+	echo "Testing cupsd config"
+	/usr/sbin/cupsd -t
+	echo "Starting cupsd"
 	/usr/sbin/cupsd -f
 else
 	"${@}"
