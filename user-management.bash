@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#PS4='Line ${LINENO}: '
+#set -x
+
+users_file="/etc/cups/users_persistent"
 
 function get_persistent_users {
 usersRaw="$(getent group lpadmin)"
@@ -15,7 +19,7 @@ done
 }
 
 function load_persistent_users {
-if ! [[ -e "/etc/cups/users_persistent" ]]; then
+if ! [[ -e "${users_file}" ]]; then
 	echo "No persistent user file found"
 	exit 0
 fi
@@ -23,9 +27,13 @@ shadowPrm="$(stat -c "%a" /etc/shadow)"
 shadowOwn="$(stat -c "%u" /etc/shadow)"
 shadowGrp="$(stat -c "%g" /etc/shadow)"
 while read -r i; do
-	if id "${newUser}" > /dev/null 2>&1; then
-		echo "User ${i%%:*} already exists"
-		break
+	if id "${i%%:*}" > /dev/null 2>&1; then
+		echo "Stale user ${i%%:*} already exists, removing"
+        if userdel "${i%%:*}" > /dev/null 2>&1; then
+            echo "Removed stale user ${i%%:*} successfully"
+        else
+            echo "Unable to remove stale user ${i%%:*}"
+        fi
 	fi
 	if useradd -M -s "/bin/false" "${i%%:*}"; then
 		echo "User ${i%%:*} imported successfully"
@@ -43,10 +51,18 @@ while read -r i; do
 		if [[ "${i%%:*}" == "${ii%%:*}" ]]; then
 			newShadowArr+=("${i}")
 		else
-			newShadowArr+=("${ii}")
+			inArray="0"
+			for iii in "${newShadowArr[@]}"; do
+				if [[ "${iii%%:*}" == "${ii%%:*}" ]]; then
+					inArray="1"
+				fi
+			done
+			if [[ "${inArray}" -eq "0" ]]; then
+				newShadowArr+=("${ii}")
+			fi
 		fi
 	done < "/etc/shadow"
-done < "/etc/cups/users_persistent"
+done < "${users_file}"
 cp "/etc/shadow" "/etc/shadow.old"
 ( for i in "${newShadowArr[@]}"; do echo "${i}"; done ) > "/etc/shadow"
 chmod "${shadowPrm}" "/etc/shadow"
@@ -63,17 +79,17 @@ while read -r i; do
 	if [[ "${importSuccess}" -eq "0" ]]; then
 		echo "Unable to import password for user ${i%%:*}"
 	fi
-done < "/etc/cups/users_persistent"
+done < "${users_file}"
 }
 
 function save_persistent_users {
 get_persistent_users
-( for i in "${shadowArr[@]}"; do echo "${i}"; done ) > "/etc/cups/users_persistent"
+( for i in "${shadowArr[@]}"; do echo "${i}"; done ) > "${users_file}"
 shadowPrm="$(stat -c "%a" /etc/shadow)"
 shadowOwn="$(stat -c "%u" /etc/shadow)"
 shadowGrp="$(stat -c "%g" /etc/shadow)"
-chmod "${shadowPrm}" "/etc/cups/users_persistent"
-chown "${shadowOwn}:${shadowGrp}" "/etc/cups/users_persistent"
+chmod "${shadowPrm}" "${users_file}"
+chown "${shadowOwn}:${shadowGrp}" "${users_file}"
 for i in "${shadowArr[@]}"; do
 	persistSave="0"
 	while read -r ii; do
@@ -81,7 +97,7 @@ for i in "${shadowArr[@]}"; do
 			persistSave="1"
 			break
 		fi
-	done < "/etc/cups/users_persistent"
+	done < "${users_file}"
 	if [[ "${persistSave}" -eq "1" ]]; then
 		echo "Verified user saved to persistent file: ${i%%:*}"
 	else
@@ -137,6 +153,7 @@ echo "User added successfully."
 }
 
 function pick_user {
+get_persistent_users
 echo ""
 n="0"
 for i in "${lpUsers[@]}"; do

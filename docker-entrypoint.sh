@@ -35,19 +35,7 @@ trap stop_cmd_6 SIGKILL
 if [[ -z "${@}" ]]; then
 	echo "Loading persistent users"
 	/usr/local/bin/user-management --load-persistent-users
-	echo "Initiating cupsd"
-	/usr/sbin/cupsd
-	while ! [[ -f "/var/run/cups/cupsd.pid" ]]; do
-		sleep 1
-	done
-	echo "Applying remote share permissions"
-	cupsctl --remote-admin --remote-any --share-printers
-	echo "Stopping cupsd"
-	kill "$(</var/run/cups/cupsd.pid)"
-	echo "Adding global ServerAlias configuration option"
-	echo "ServerAlias *" >> /etc/cups/cupsd.conf
-	cp -rp /etc/cups /etc/cups-skel
-	if [ ! -f /etc/cups/cupsd.conf ]; then
+	if ! [[ -f /etc/cups/cupsd.conf ]]; then
 		cp -rpn /etc/cups-skel/* /etc/cups/
 	fi
 	echo "Testing cupsd config"

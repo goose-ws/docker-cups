@@ -9,35 +9,47 @@ ARG BUILD_DATE
 # environment
 ENV ADMIN_PASSWORD=admin
 
-# labels
-LABEL maintainer="goose <goose[at]goose[dot]ws>" \
-  org.label-schema.schema-version="1.0" \
-  org.label-schema.name="goosews/cups" \
-  org.label-schema.description="Simple CUPS docker image" \
-  org.label-schema.version="0.1" \
-  org.label-schema.url="https://hub.docker.com/r/goosews/cups" \
-  org.label-schema.vcs-url="https://github.com/goose-ws/docker-cups" \
-  org.label-schema.vcs-ref=$VCS_REF \
-  org.label-schema.build-date=$BUILD_DATE
-
 # install packages
-RUN apt update
-RUN apt install -y sudo cups cups-bsd cups-filters foomatic-db-compressed-ppds printer-driver-all openprinting-ppds hpijs-ppds hp-ppd hplip dumb-init
-RUN apt clean
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+  && apt-get install -y \
+  sudo \
+  cups \
+  cups-bsd \
+  cups-filters \
+  foomatic-db-compressed-ppds \
+  printer-driver-all \
+  openprinting-ppds \
+  hpijs-ppds \
+  hp-ppd \
+  hplip \
+  dumb-init \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 # add print user
-RUN adduser --home /home/admin --shell /bin/bash --gecos "admin" --disabled-password admin
-RUN adduser admin sudo
-RUN adduser admin lp
-RUN adduser admin lpadmin
+RUN adduser --home /home/admin --shell /bin/bash --gecos "admin" --disabled-password admin \
+  && adduser admin sudo \
+  && adduser admin lp \
+  && adduser admin lpadmin
 
 # disable sudo password checking
 RUN echo 'admin ALL=(ALL:ALL) ALL' >> /etc/sudoers
 
+# enable access to CUPS
+RUN /usr/sbin/cupsd \
+  && while [ ! -f /var/run/cups/cupsd.pid ]; do sleep 1; done \
+  && cupsctl --remote-admin --remote-any --share-printers \
+  && kill $(cat /var/run/cups/cupsd.pid) \
+  && echo "ServerAlias *" >> /etc/cups/cupsd.conf
+
+# copy /etc/cups for skeleton usage
+RUN cp -rp /etc/cups /etc/cups-skel
+
+# set default password for user 'admin' to 'admin'
+RUN echo "admin:admin" | chpasswd
+
 # user management script
 ADD user-management.bash /usr/local/bin/user-management
-RUN chmod +x /usr/local/bin/user-management
 
 # starting command
 ADD docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
